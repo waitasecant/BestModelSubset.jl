@@ -1,11 +1,11 @@
-function forward_stepwise_selection(df)
+function forward_stepwise_selection(df::DataFrame)
     dev = []
     comb = collect(combinations(1:length(names(df))-1, 1))
     for num in 1:length(names(df))-1
         val = []
         for j in comb
             logreg = glm(Array(df[:, j]), Array(df[:, 15]), Binomial(), ProbitLink())
-            push!(val, MLBase.deviance(logreg))
+            push!(val, deviance(logreg))
         end
         push!(dev, comb[indexin(minimum(val), val)])
         comb = collect(combinations(1:length(names(df))-1, num + 1))
