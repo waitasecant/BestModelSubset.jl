@@ -4,7 +4,7 @@ function forward_stepwise_selection(df::DataFrame)
     for num in 1:length(names(df))-1
         val = []
         for j in comb
-            logreg = glm(Array(df[:, j]), Array(df[:, 15]), Binomial(), ProbitLink())
+            logreg = glm(Array(df[:, j]), Array(df[:, names(df)[end]]), Binomial(), ProbitLink())
             push!(val, deviance(logreg))
         end
         push!(dev, comb[indexin(minimum(val), val)])
@@ -29,7 +29,7 @@ function forward_stepwise_selection(df::Matrix{Float64})
     for num in 1:length(names(df))-1
         val = []
         for j in comb
-            logreg = glm(Array(df[:, j]), Array(df[:, 15]), Binomial(), ProbitLink())
+            logreg = glm(Array(df[:, j]), Array(df[:, names(df)[end]]), Binomial(), ProbitLink())
             push!(val, deviance(logreg))
         end
         push!(dev, comb[indexin(minimum(val), val)])

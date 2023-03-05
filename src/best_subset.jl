@@ -3,7 +3,7 @@ function best_subset_selection(df::DataFrame)
     for num in 1:length(names(df))-1
         val = []
         for i in collect(combinations(1:length(names(df))-1, num))
-            logreg = glm(Array(df[:, i]), Array(df[:, 15]), Binomial(), ProbitLink())
+            logreg = glm(Array(df[:, i]), Array(df[:, names(df)[end]]), Binomial(), ProbitLink())
             push!(val, deviance(logreg))
         end
         push!(dev, collect(combinations(1:length(names(df))-1, num))[indexin(minimum(val), val)])
@@ -17,7 +17,7 @@ function best_subset_selection(df::Matrix{Float64})
     for num in 1:length(names(df))-1
         val = []
         for i in collect(combinations(1:length(names(df))-1, num))
-            logreg = glm(Array(df[:, i]), Array(df[:, 15]), Binomial(), ProbitLink())
+            logreg = glm(Array(df[:, i]), Array(df[:, names(df)[end]]), Binomial(), ProbitLink())
             push!(val, deviance(logreg))
         end
         push!(dev, collect(combinations(1:length(names(df))-1, num))[indexin(minimum(val), val)])

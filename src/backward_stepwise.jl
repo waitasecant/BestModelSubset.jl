@@ -4,7 +4,7 @@ function backward_stepwise_selection(df::DataFrame)
     while length(dev[end]) != 1
         val = []
         for j in comb
-            logreg = glm(Array(df[:, j]), Array(df[:, 15]), Binomial(), ProbitLink())
+            logreg = glm(Array(df[:, j]), Array(df[:, names(df)[end]]), Binomial(), ProbitLink())
             push!(val, deviance(logreg))
         end
         push!(dev, comb[indexin(minimum(val), val)][1])
@@ -20,7 +20,7 @@ function backward_stepwise_selection(df::Matrix{Float64})
     while length(dev[end]) != 1
         val = []
         for j in comb
-            logreg = glm(Array(df[:, j]), Array(df[:, 15]), Binomial(), ProbitLink())
+            logreg = glm(Array(df[:, j]), Array(df[:, names(df)[end]]), Binomial(), ProbitLink())
             push!(val, deviance(logreg))
         end
         push!(dev, comb[indexin(minimum(val), val)][1])
