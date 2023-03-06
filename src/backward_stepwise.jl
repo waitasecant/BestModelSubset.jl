@@ -33,6 +33,6 @@ function backward_stepwise_selection(df::Matrix{Float64})
         end
         return dev
     else
-        forward_stepwise_selection(df::DataFrame)
+        forward_stepwise_selection(df::Matrix{Float64})
     end
 end
