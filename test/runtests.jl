@@ -2,8 +2,7 @@ using Bess
 using Test
 using CSV, DataFrames, UrlDownload
 
-
-df = CSV.read("C:\\Users\\Dell\\.julia\\dev\\Bess\\test\\new_brca.csv", DataFrame, normalizenames=true);
+df = DataFrame(urldownload("https://raw.githubusercontent.com/waitasecant/Bess.jl/main/test/new_brca.csv"))
 
 @testset "Best Subset Selection" begin
     @test Bess.best_subset_selection(df) isa Array
