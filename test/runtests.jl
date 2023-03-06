@@ -18,5 +18,5 @@ end
 @testset "Backward Step-wise Selection" begin
     @test Bess.backward_stepwise_selection(df1) isa Array
     @test Bess.backward_stepwise_selection(Array(df1)) isa Array
-    @test Bess.backward_subset_selection(df2) isa Array
+    @test Bess.backward_stepwise_selection(df2) isa Array
 end
