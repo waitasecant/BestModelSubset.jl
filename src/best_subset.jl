@@ -1,3 +1,5 @@
+include("model_selection.jl")
+
 function best_subset_selection(df::DataFrame)
     if size(df)[1] > size(df)[2]
         dev = []
@@ -31,4 +33,17 @@ function best_subset_selection(df::Matrix{Float64})
     else
         forward_stepwise_selection(df::Matrix{Float64})
     end
+end
+
+function best_subset_selection(obj::ModelSelection, df::DataFrame)
+    dev = []
+    for num in 1:length(names(df))-1
+        val = []
+        for i in collect(combinations(1:length(names(df))-1, num))
+            logreg = glm(Array(df[:, i]), Array(df[:, end]), Binomial(), ProbitLink())
+            push!(val, obj.param1(logreg))
+        end
+        push!(dev, collect(combinations(1:length(names(df))-1, num))[indexin(minimum(val), val)])
+    end
+    return [dev[i][1] for i in 1:length(names(df))-1]
 end
