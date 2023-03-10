@@ -1,10 +1,11 @@
 using Bess
 using Test
-using CSV, DataFrames
+using CSV, DataFrames, UrlDownload, Random
 
+Random.seed!(1234)
 # df1 = DataFrame(urldownload("https://raw.githubusercontent.com/waitasecant/Bess.jl/main/test/new_brca.csv"))
 df1 = hcat(rand(Float64, (50, 20)), rand([0, 1], (50, 1)))
-df2 = hcat(rand(Float64, (12, 20)), rand([0, 1], (12, 1)))
+df2 = hcat(rand(Float64, (10, 20)), rand([0, 1], (10, 1)))
 
 
 @testset "Best Subset Selection" begin
