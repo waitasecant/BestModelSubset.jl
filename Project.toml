@@ -16,7 +16,6 @@ julia = "1"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
-UrlDownload = "856ac37a-3032-4c1c-9122-f86d88358c8b"
 
 [targets]
-test = ["Test", "UrlDownload"]
+test = ["Test"]

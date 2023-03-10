@@ -45,3 +45,16 @@ function eval_selection(obj::ModelSelection, data::DataFrame)
     obj.param1 = MLBase.deviance(glm(Array(data[:, dev[indexin(minimum(final), final)[1]]]), Array(data[:, end]), Binomial(), ProbitLink()))
     return [dev[indexin(minimum(final), final)[1]]]
 end
+
+function best_subset_selection(obj::ModelSelection, df::DataFrame)
+    dev = []
+    for num in 1:length(names(df))-1
+        val = []
+        for i in collect(combinations(1:length(names(df))-1, num))
+            logreg = glm(Array(df[:, i]), Array(df[:, end]), Binomial(), ProbitLink())
+            push!(val, obj.param1(logreg))
+        end
+        push!(dev, collect(combinations(1:length(names(df))-1, num))[indexin(minimum(val), val)])
+    end
+    return [dev[i][1] for i in 1:length(names(df))-1]
+end

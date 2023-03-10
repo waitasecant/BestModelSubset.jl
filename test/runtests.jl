@@ -1,10 +1,11 @@
 using Bess
 using Test
-using CSV, DataFrames, UrlDownload
+using CSV, DataFrames
 
-df1 = DataFrame(urldownload("https://raw.githubusercontent.com/waitasecant/Bess.jl/main/test/new_brca.csv"))
+# df1 = DataFrame(urldownload("https://raw.githubusercontent.com/waitasecant/Bess.jl/main/test/new_brca.csv"))
+df1 = hcat(rand(Float64, (50, 20)), rand([0, 1], (50, 1)))
 df2 = hcat(rand(Float64, (12, 20)), rand([0, 1], (12, 1)))
-df3 = hcat(rand(Float64, (50, 20)), rand([0, 1], (50, 1)))
+
 
 @testset "Best Subset Selection" begin
     @test Bess.best_subset_selection(df1) isa Array
@@ -26,5 +27,5 @@ end
 end
 
 @testset "Evaluation Selection" begin
-    @test Bess.eval_selection(ModelSelection(), DataFrame(df3, :auto)) isa Array
+    @test Bess.eval_selection(Bess.ModelSelection(), DataFrame(df1, :auto)) isa Array
 end
