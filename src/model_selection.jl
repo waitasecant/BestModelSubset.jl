@@ -1,3 +1,6 @@
+export fit
+export ModelSelection
+
 mutable struct ModelSelection
     algorithm::Union{Function,Nothing}
     deviance::Union{Function,Real,Nothing}
@@ -31,7 +34,7 @@ function ModelSelection(algorithm::AbstractString, param1::AbstractString, param
     end
 end
 
-function eval_selection(obj::ModelSelection, data::DataFrame)
+function fit(obj::ModelSelection, data::Union{DataFrame,AbstractMatrix{<:Real}})
     dev = best_subset_selection(obj, data)
     final = []
     for d in dev
@@ -44,6 +47,11 @@ function eval_selection(obj::ModelSelection, data::DataFrame)
     obj.deviance = MLBase.deviance(glm(Array(data[:, dev[indexin(minimum(final), final)[1]]]), Array(data[:, end]), Binomial(), ProbitLink()))
     obj.param1 = MLBase.deviance(glm(Array(data[:, dev[indexin(minimum(final), final)[1]]]), Array(data[:, end]), Binomial(), ProbitLink()))
     return [dev[indexin(minimum(final), final)[1]]]
+end
+
+function best_subset_selection(obj::ModelSelection, df::AbstractMatrix{<:Real})
+    df = DataFrame(df, :auto)
+    best_subset_selection(obj, df)
 end
 
 function best_subset_selection(obj::ModelSelection, df::DataFrame)

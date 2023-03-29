@@ -17,7 +17,7 @@ function backward_stepwise_selection(df::DataFrame)
     end
 end
 
-function backward_stepwise_selection(df::Matrix{Float64})
+function backward_stepwise_selection(df::AbstractMatrix{<:Real})
     if size(df)[1] > size(df)[2]
         df = DataFrame(df, :auto)
         dev = [[s for s in 1:length(names(df))-1]]
@@ -33,6 +33,6 @@ function backward_stepwise_selection(df::Matrix{Float64})
         end
         return dev
     else
-        forward_stepwise_selection(df::Matrix{Float64})
+        forward_stepwise_selection(df::AbstractMatrix{<:Real})
     end
 end

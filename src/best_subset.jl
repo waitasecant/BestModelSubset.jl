@@ -15,7 +15,7 @@ function best_subset_selection(df::DataFrame)
     end
 end
 
-function best_subset_selection(df::Matrix{Float64})
+function best_subset_selection(df::AbstractMatrix{<:Real})
     if size(df)[1] > size(df)[2]
         dev = []
         df = DataFrame(df, :auto)
@@ -29,6 +29,6 @@ function best_subset_selection(df::Matrix{Float64})
         end
         return [dev[i][1] for i in 1:length(names(df))-1]
     else
-        forward_stepwise_selection(df::Matrix{Float64})
+        forward_stepwise_selection(df::AbstractMatrix{<:Real})
     end
 end

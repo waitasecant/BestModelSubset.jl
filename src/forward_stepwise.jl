@@ -22,7 +22,7 @@ function forward_stepwise_selection(df::DataFrame)
     return [dev[i][1] for i in 1:length(names(df))-1]
 end
 
-function forward_stepwise_selection(df::Matrix{Float64})
+function forward_stepwise_selection(df::AbstractMatrix{<:Real})
     dev = []
     df = DataFrame(df, :auto)
     comb = collect(combinations(1:length(names(df))-1, 1))
