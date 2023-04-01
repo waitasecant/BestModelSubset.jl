@@ -1,6 +1,11 @@
+# Exporting the ModelSelection struct and fit function
 export fit
 export ModelSelection
 
+"""
+Mutable struct taking input as algorithm, params with an inner constructor.
+The inner constructor check if aic is given as input for param2 and creates a new ModelSelection object with param2 set as bic else aic.
+"""
 mutable struct ModelSelection
     algorithm::Union{Function,Nothing}
     deviance::Union{Function,Real,Nothing}
@@ -13,15 +18,29 @@ mutable struct ModelSelection
         typeof(aic) <: Nothing ? new(algorithm, deviance, aic, bic, deviance, bic) : new(algorithm, deviance, aic, bic, deviance, aic)
 end
 
+"""
+An outer (default) constructor.
+The outer (default) constructor sets algorithm to be Forward Stepwise, param1 to be deviance and param2 to be aic.
+The inner constructor comes into play and set param2 as aic.
+"""
 function ModelSelection()
-    return ModelSelection(best_subset_selection, MLBase.deviance, MLBase.aic, nothing, nothing, nothing)
+    return ModelSelection(forward_stepwise, MLBase.deviance, MLBase.aic, nothing, nothing, nothing)
 end
 
+"""
+An outer (main) constructor.
+The outer (main) constructor inputs algorithm, param1 and param2 as strings
+and then assigns corresponding functions using the dictionary and creates a ModelSelection object.
+"""
 function ModelSelection(algorithm::AbstractString, param1::AbstractString, param2::AbstractString)
     dict = Dict([
-        "best" => best_subset_selection,
-        "bess" => best_subset_selection,
-        "best_subset_selection" => best_subset_selection,
+        "best" => best_subset,
+        "bess" => best_subset,
+        "best_subset" => best_subset,
+        "best_subset_selection" => best_subset,
+        "forward" => forward_stepwise,
+        "forward_stepwise" => forward_stepwise,
+        "forward_stepwise_selection" => forward_stepwise,
         "aic" => MLBase.aic,
         "bic" => MLBase.bic,
         "deviance" => MLBase.deviance
@@ -34,8 +53,12 @@ function ModelSelection(algorithm::AbstractString, param1::AbstractString, param
     end
 end
 
+"""
+The fit function inputs the ModelSelection object created and data to be either A DataFrame or a matrix.
+and updates values into 
+"""
 function fit(obj::ModelSelection, data::Union{DataFrame,AbstractMatrix{<:Real}})
-    dev = best_subset_selection(obj, data)
+    dev = obj.algorithm(obj, data)
     final = []
     for d in dev
         logreg = glm(Array(data[:, d]), Array(data[:, end]), Binomial(), ProbitLink())
@@ -45,24 +68,65 @@ function fit(obj::ModelSelection, data::Union{DataFrame,AbstractMatrix{<:Real}})
     obj.aic = MLBase.aic(glm(Array(data[:, dev[indexin(minimum(final), final)[1]]]), Array(data[:, end]), Binomial(), ProbitLink()))
     obj.bic = MLBase.bic(glm(Array(data[:, dev[indexin(minimum(final), final)[1]]]), Array(data[:, end]), Binomial(), ProbitLink()))
     obj.deviance = MLBase.deviance(glm(Array(data[:, dev[indexin(minimum(final), final)[1]]]), Array(data[:, end]), Binomial(), ProbitLink()))
-    obj.param1 = MLBase.deviance(glm(Array(data[:, dev[indexin(minimum(final), final)[1]]]), Array(data[:, end]), Binomial(), ProbitLink()))
+    obj.param1 = obj.deviance
     return [dev[indexin(minimum(final), final)[1]]]
 end
 
-function best_subset_selection(obj::ModelSelection, df::AbstractMatrix{<:Real})
-    df = DataFrame(df, :auto)
-    best_subset_selection(obj, df)
+# Best Subset returns an array of arrays of indexes of each size.
+function best_subset(obj::ModelSelection, df::DataFrame)
+    if size(df)[1] > size(df)[2]
+        dev = []
+        for num in 1:length(names(df))-1
+            val = []
+            for i in collect(combinations(1:length(names(df))-1, num))
+                logreg = glm(Array(df[:, i]), Array(df[:, end]), Binomial(), ProbitLink())
+                push!(val, obj.param1(logreg))
+            end
+            push!(dev, collect(combinations(1:length(names(df))-1, num))[indexin(minimum(val), val)])
+        end
+        return [dev[i][1] for i in 1:length(names(df))-1]
+    else
+        forward_stepwise(obj, df)
+    end
 end
 
-function best_subset_selection(obj::ModelSelection, df::DataFrame)
+# Best Subset just instead of DataFrame, input is a matrix.
+function best_subset(obj::ModelSelection, df::AbstractMatrix{<:Real})
+    df = DataFrame(df, :auto)
+    if size(df)[1] > size(df)[2]
+        best_subset(obj, df)
+    else
+        forward_stepwise(obj, df)
+    end
+end
+
+# Forward Step-wise returns an array of arrays of indexes of each size.
+function forward_stepwise(obj::ModelSelection, df::DataFrame)
     dev = []
+    comb = collect(combinations(1:length(names(df))-1, 1))
     for num in 1:length(names(df))-1
         val = []
-        for i in collect(combinations(1:length(names(df))-1, num))
-            logreg = glm(Array(df[:, i]), Array(df[:, end]), Binomial(), ProbitLink())
+        for j in comb
+            logreg = glm(Array(df[:, j]), Array(df[:, names(df)[end]]), Binomial(), ProbitLink())
             push!(val, obj.param1(logreg))
         end
-        push!(dev, collect(combinations(1:length(names(df))-1, num))[indexin(minimum(val), val)])
+        push!(dev, comb[indexin(minimum(val), val)])
+        comb = collect(combinations(1:length(names(df))-1, num + 1))
+        l = []
+        for j in 1:length(comb)
+            a = true
+            for i in dev[end][1]
+                a = a & (i in comb[j])
+            end
+            push!(l, a)
+        end
+        comb = comb[[i for i in l]]
     end
     return [dev[i][1] for i in 1:length(names(df))-1]
+end
+
+# Forward Stepwise just instead of DataFrame, input is a matrix.
+function forward_stepwise(obj::ModelSelection, df::AbstractMatrix{<:Real})
+    df = DataFrame(df, :auto)
+    forward_stepwise(obj, df)
 end

@@ -6,9 +6,9 @@ using GLM
 using Combinatorics
 using MLBase
 
-include("best_subset.jl")
-include("forward_stepwise.jl")
-include("backward_stepwise.jl")
+# include("best_subset.jl")
+# include("forward_stepwise.jl")
+# include("backward_stepwise.jl")
 include("model_selection.jl")
 
 end
