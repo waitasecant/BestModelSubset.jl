@@ -1,6 +1,8 @@
-# Exporting the ModelSelection struct and fit function
-export fit
 export ModelSelection
+export fit
+export best_subset
+export forward_stepwise
+export backward_stepwise
 
 """
 Mutable struct taking input as algorithm, params with an inner constructor.
@@ -41,15 +43,18 @@ function ModelSelection(algorithm::AbstractString, param1::AbstractString, param
         "forward" => forward_stepwise,
         "forward_stepwise" => forward_stepwise,
         "forward_stepwise_selection" => forward_stepwise,
+        "backward" => backward_stepwise,
+        "backward_stepwise" => backward_stepwise,
+        "backward_stepwise_selection" => backward_stepwise,
         "aic" => MLBase.aic,
         "bic" => MLBase.bic,
         "deviance" => MLBase.deviance
     ])
     if param2 == "aic"
-        return ModelSelection(values(dict[algorithm]), values(dict[param1]), values(dict[param2]), nothing, nothing, nothing)
+        return ModelSelection(values(dict[lowercase(algorithm)]), values(dict[lowercase(param1)]), values(dict[lowercase(param2)]), nothing, nothing, nothing)
     end
     if param2 == "bic"
-        return ModelSelection(values(dict[algorithm]), values(dict[param1]), nothing, values(dict[param2]), nothing, nothing)
+        return ModelSelection(values(dict[lowercase(algorithm)]), values(dict[lowercase(param1)]), nothing, values(dict[lowercase(param2)]), nothing, nothing)
     end
 end
 
@@ -72,35 +77,7 @@ function fit(obj::ModelSelection, data::Union{DataFrame,AbstractMatrix{<:Real}})
     return [dev[indexin(minimum(final), final)[1]]]
 end
 
-# Best Subset returns an array of arrays of indexes of each size.
-function best_subset(obj::ModelSelection, df::DataFrame)
-    if size(df)[1] > size(df)[2]
-        dev = []
-        for num in 1:length(names(df))-1
-            val = []
-            for i in collect(combinations(1:length(names(df))-1, num))
-                logreg = glm(Array(df[:, i]), Array(df[:, end]), Binomial(), ProbitLink())
-                push!(val, obj.param1(logreg))
-            end
-            push!(dev, collect(combinations(1:length(names(df))-1, num))[indexin(minimum(val), val)])
-        end
-        return [dev[i][1] for i in 1:length(names(df))-1]
-    else
-        forward_stepwise(obj, df)
-    end
-end
-
-# Best Subset just instead of DataFrame, input is a matrix.
-function best_subset(obj::ModelSelection, df::AbstractMatrix{<:Real})
-    df = DataFrame(df, :auto)
-    if size(df)[1] > size(df)[2]
-        best_subset(obj, df)
-    else
-        forward_stepwise(obj, df)
-    end
-end
-
-# Forward Step-wise returns an array of arrays of indexes of each size.
+# Forward Step-wise Selection
 function forward_stepwise(obj::ModelSelection, df::DataFrame)
     dev = []
     comb = collect(combinations(1:length(names(df))-1, 1))
@@ -125,8 +102,66 @@ function forward_stepwise(obj::ModelSelection, df::DataFrame)
     return [dev[i][1] for i in 1:length(names(df))-1]
 end
 
-# Forward Stepwise just instead of DataFrame, input is a matrix.
+# Forward Step-wise Selection
 function forward_stepwise(obj::ModelSelection, df::AbstractMatrix{<:Real})
     df = DataFrame(df, :auto)
     forward_stepwise(obj, df)
+end
+
+# Best Subset Selection
+function best_subset(obj::ModelSelection, df::DataFrame)
+    if size(df)[1] > size(df)[2]
+        dev = []
+        for num in 1:length(names(df))-1
+            val = []
+            for i in collect(combinations(1:length(names(df))-1, num))
+                logreg = glm(Array(df[:, i]), Array(df[:, end]), Binomial(), ProbitLink())
+                push!(val, obj.param1(logreg))
+            end
+            push!(dev, collect(combinations(1:length(names(df))-1, num))[indexin(minimum(val), val)])
+        end
+        return [dev[i][1] for i in 1:length(names(df))-1]
+    else
+        forward_stepwise(obj, df)
+    end
+end
+
+# Best Subset Selection
+function best_subset(obj::ModelSelection, df::AbstractMatrix{<:Real})
+    df = DataFrame(df, :auto)
+    if size(df)[1] > size(df)[2]
+        best_subset(obj, df)
+    else
+        forward_stepwise(obj, df)
+    end
+end
+
+# Backward Step-wise Selection
+function backward_stepwise(obj::ModelSelection, df::DataFrame)
+    if size(df)[1] > size(df)[2]
+        dev = [[s for s in 1:length(names(df))-1]]
+        comb = collect(combinations(dev[1], length(names(df)) - 2))
+        while length(dev[end]) != 1
+            val = []
+            for j in comb
+                logreg = glm(Array(df[:, j]), Array(df[:, names(df)[end]]), Binomial(), ProbitLink())
+                push!(val, obj.param1(logreg))
+            end
+            push!(dev, comb[indexin(minimum(val), val)][1])
+            comb = collect(combinations(dev[end], length(dev[end]) - 1))
+        end
+        return dev
+    else
+        forward_stepwise(obj, df)
+    end
+end
+
+# Backward Step-wise Selection
+function backward_stepwise(obj::ModelSelection, df::AbstractMatrix{<:Real})
+    df = DataFrame(df, :auto)
+    if size(df)[1] > size(df)[2]
+        backward_stepwise(obj, df)
+    else
+        forward_stepwise(obj, df)
+    end
 end
