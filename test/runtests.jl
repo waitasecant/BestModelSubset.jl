@@ -1,11 +1,8 @@
 using Bess
 using Test
-using CSV, DataFrames, Random
-# using UrlDownload
+using DataFrames, Random
+
 Random.seed!(1234)
-
-# df1 = DataFrame(urldownload("https://raw.githubusercontent.com/waitasecant/Bess.jl/main/test/new_brca.csv"))
-
 df1 = hcat(rand(Float64, (50, 20)), rand([0, 1], (50, 1))) # n>p
 df2 = hcat(rand(Float64, (10, 20)), rand([0, 1], (10, 1))) # n<p
 
