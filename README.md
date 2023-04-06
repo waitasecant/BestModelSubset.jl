@@ -18,12 +18,17 @@ using Bess
 ```
 
 ### ModelSelection
-Instantiate a defaut `ModelSelection` object:
+Instantiate a `ModelSelection` object by running:
 ```julia-repl
-obj = ModelSelection()
+obj = ModelSelection("bess", "r2", "adjr2")
 ```
 
 Fit the object to the data:
 ```julia-repl
-fit(obj, hcat(rand(Float64, (50, 20)), rand([0, 1], (50, 1))))
+fit!(obj, hcat(rand(Float64, (50, 21))))
+```
+
+Access various statistics like aic, bic by running:
+```julia-repl
+obj.aic
 ```
