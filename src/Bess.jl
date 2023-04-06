@@ -4,6 +4,7 @@ using DataFrames: DataFrame
 using GLM
 using Combinatorics: combinations
 using MLBase: deviance, r2, adjr2, aic, bic
+using Suppressor: @suppress
 
 export ModelSelection
 export fit!
@@ -134,42 +135,44 @@ indexes of the columns corresponding to least value of param 2.
 """
 
 function fit!(obj::ModelSelection, data::Union{DataFrame,AbstractMatrix{<:Real}})
-    if [i for i in Set(Array(data[:, end]))] in [0, 0.0, 1, 1.0]
-        dev = obj.algorithm(obj, data)
-        final = []
-        for d in dev
-            logreg = glm(Array(data[:, d]), Array(data[:, end]), Binomial(), ProbitLink())
-            push!(final, obj.param2(logreg))
+    @suppress begin
+        if [i for i in Set(Array(data[:, end]))] in [0, 0.0, 1, 1.0]
+            dev = obj.algorithm(obj, data)
+            final = []
+            for d in dev
+                logreg = glm(Array(data[:, d]), Array(data[:, end]), Binomial(), ProbitLink())
+                push!(final, obj.param2(logreg))
+            end
+            obj.param2 = minimum(final)
+            obj.r2 = nothing
+            obj.adjr2 = nothing
+            obj.deviance = deviance(glm(Array(data[:, dev[indexin(minimum(final), final)[1]]]),
+                Array(data[:, end]), Binomial(), ProbitLink()))
+            obj.param1 = obj.deviance
+            obj.aic = aic(glm(Array(data[:, dev[indexin(minimum(final), final)[1]]]),
+                Array(data[:, end]), Binomial(), ProbitLink()))
+            obj.bic = bic(glm(Array(data[:, dev[indexin(minimum(final), final)[1]]]),
+                Array(data[:, end]), Binomial(), ProbitLink()))
+        else
+            dev = obj.algorithm(obj, data)
+            final = []
+            for d in dev
+                logreg = lm(Array(data[:, d]), Array(data[:, end]))
+                push!(final, obj.param2(logreg))
+            end
+            obj.param2 = minimum(final)
+            obj.r2 = r2(lm(Array(data[:, dev[indexin(minimum(final), final)[1]]]),
+                Array(data[:, end])))
+            obj.adjr2 = adjr2(lm(Array(data[:, dev[indexin(minimum(final), final)[1]]]),
+                Array(data[:, end])))
+            obj.param1 = obj.r2
+            obj.aic = aic(lm(Array(data[:, dev[indexin(minimum(final), final)[1]]]),
+                Array(data[:, end])))
+            obj.bic = bic(lm(Array(data[:, dev[indexin(minimum(final), final)[1]]]),
+                Array(data[:, end])))
         end
-        obj.param2 = minimum(final)
-        obj.r2 = nothing
-        obj.adjr2 = nothing
-        obj.deviance = deviance(glm(Array(data[:, dev[indexin(minimum(final), final)[1]]]),
-            Array(data[:, end]), Binomial(), ProbitLink()))
-        obj.param1 = obj.deviance
-        obj.aic = aic(glm(Array(data[:, dev[indexin(minimum(final), final)[1]]]),
-            Array(data[:, end]), Binomial(), ProbitLink()))
-        obj.bic = bic(glm(Array(data[:, dev[indexin(minimum(final), final)[1]]]),
-            Array(data[:, end]), Binomial(), ProbitLink()))
-    else
-        dev = obj.algorithm(obj, data)
-        final = []
-        for d in dev
-            logreg = lm(Array(data[:, d]), Array(data[:, end]))
-            push!(final, obj.param2(logreg))
-        end
-        obj.param2 = minimum(final)
-        obj.r2 = r2(lm(Array(data[:, dev[indexin(minimum(final), final)[1]]]),
-            Array(data[:, end])))
-        obj.adjr2 = adjr2(lm(Array(data[:, dev[indexin(minimum(final), final)[1]]]),
-            Array(data[:, end])))
-        obj.param1 = obj.r2
-        obj.aic = aic(lm(Array(data[:, dev[indexin(minimum(final), final)[1]]]),
-            Array(data[:, end])))
-        obj.bic = bic(lm(Array(data[:, dev[indexin(minimum(final), final)[1]]]),
-            Array(data[:, end])))
+        return [dev[indexin(minimum(final), final)[1]]]
     end
-    return [dev[indexin(minimum(final), final)[1]]]
 end
 
 # Forward Step-wise Selection
@@ -180,50 +183,52 @@ Executes the forward step-wise selection algorithm returning a vector of vectors
 indexes of columns corresponding to least value of param1.
 """
 function forward_stepwise(obj::ModelSelection, df::DataFrame)
-    if [i for i in Set(Array(df[:, end]))] in [0, 0.0, 1, 1.0]
-        dev = []
-        comb = collect(combinations(1:length(names(df))-1, 1))
-        for num in 1:length(names(df))-1
-            val = []
-            for j in comb
-                logreg = glm(Array(df[:, j]), Array(df[:, names(df)[end]]), Binomial(), ProbitLink())
-                push!(val, obj.param1(logreg))
-            end
-            push!(dev, comb[indexin(minimum(val), val)])
-            comb = collect(combinations(1:length(names(df))-1, num + 1))
-            l = []
-            for j in 1:length(comb)
-                a = true
-                for i in dev[end][1]
-                    a = a & (i in comb[j])
+    @suppress begin
+        if [i for i in Set(Array(df[:, end]))] in [0, 0.0, 1, 1.0]
+            dev = []
+            comb = collect(combinations(1:length(names(df))-1, 1))
+            for num in 1:length(names(df))-1
+                val = []
+                for j in comb
+                    logreg = glm(Array(df[:, j]), Array(df[:, names(df)[end]]), Binomial(), ProbitLink())
+                    push!(val, obj.param1(logreg))
                 end
-                push!(l, a)
-            end
-            comb = comb[[i for i in l]]
-        end
-        return [dev[i][1] for i in 1:length(names(df))-1]
-    else
-        dev = []
-        comb = collect(combinations(1:length(names(df))-1, 1))
-        for num in 1:length(names(df))-1
-            val = []
-            for j in comb
-                logreg = lm(Array(df[:, j]), Array(df[:, names(df)[end]]))
-                push!(val, obj.param1(logreg))
-            end
-            push!(dev, comb[indexin(maximum(val), val)])
-            comb = collect(combinations(1:length(names(df))-1, num + 1))
-            l = []
-            for j in 1:length(comb)
-                a = true
-                for i in dev[end][1]
-                    a = a & (i in comb[j])
+                push!(dev, comb[indexin(minimum(val), val)])
+                comb = collect(combinations(1:length(names(df))-1, num + 1))
+                l = []
+                for j in 1:length(comb)
+                    a = true
+                    for i in dev[end][1]
+                        a = a & (i in comb[j])
+                    end
+                    push!(l, a)
                 end
-                push!(l, a)
+                comb = comb[[i for i in l]]
             end
-            comb = comb[[i for i in l]]
+            return [dev[i][1] for i in 1:length(names(df))-1]
+        else
+            dev = []
+            comb = collect(combinations(1:length(names(df))-1, 1))
+            for num in 1:length(names(df))-1
+                val = []
+                for j in comb
+                    logreg = lm(Array(df[:, j]), Array(df[:, names(df)[end]]))
+                    push!(val, obj.param1(logreg))
+                end
+                push!(dev, comb[indexin(maximum(val), val)])
+                comb = collect(combinations(1:length(names(df))-1, num + 1))
+                l = []
+                for j in 1:length(comb)
+                    a = true
+                    for i in dev[end][1]
+                        a = a & (i in comb[j])
+                    end
+                    push!(l, a)
+                end
+                comb = comb[[i for i in l]]
+            end
+            return [dev[i][1] for i in 1:length(names(df))-1]
         end
-        return [dev[i][1] for i in 1:length(names(df))-1]
     end
 end
 
@@ -247,32 +252,34 @@ Executes the best subset selection algorithm returning a vector of vectors conta
 indexes of columns corresponding to least value of param1.
 """
 function best_subset(obj::ModelSelection, df::DataFrame)
-    if size(df)[1] > size(df)[2]
-        if [i for i in Set(Array(df[:, end]))] in [0, 0.0, 1, 1.0]
-            dev = []
-            for num in 1:length(names(df))-1
-                val = []
-                for i in collect(combinations(1:length(names(df))-1, num))
-                    logreg = glm(Array(df[:, i]), Array(df[:, end]), Binomial(), ProbitLink())
-                    push!(val, obj.param1(logreg))
+    @suppress begin
+        if size(df)[1] > size(df)[2]
+            if [i for i in Set(Array(df[:, end]))] in [0, 0.0, 1, 1.0]
+                dev = []
+                for num in 1:length(names(df))-1
+                    val = []
+                    for i in collect(combinations(1:length(names(df))-1, num))
+                        logreg = glm(Array(df[:, i]), Array(df[:, end]), Binomial(), ProbitLink())
+                        push!(val, obj.param1(logreg))
+                    end
+                    push!(dev, collect(combinations(1:length(names(df))-1, num))[indexin(minimum(val), val)])
                 end
-                push!(dev, collect(combinations(1:length(names(df))-1, num))[indexin(minimum(val), val)])
+                return [dev[i][1] for i in 1:length(names(df))-1]
+            else
+                dev = []
+                for num in 1:length(names(df))-1
+                    val = []
+                    for i in collect(combinations(1:length(names(df))-1, num))
+                        logreg = lm(Array(df[:, i]), Array(df[:, end]))
+                        push!(val, obj.param1(logreg))
+                    end
+                    push!(dev, collect(combinations(1:length(names(df))-1, num))[indexin(maximum(val), val)])
+                end
+                return [dev[i][1] for i in 1:length(names(df))-1]
             end
-            return [dev[i][1] for i in 1:length(names(df))-1]
         else
-            dev = []
-            for num in 1:length(names(df))-1
-                val = []
-                for i in collect(combinations(1:length(names(df))-1, num))
-                    logreg = lm(Array(df[:, i]), Array(df[:, end]))
-                    push!(val, obj.param1(logreg))
-                end
-                push!(dev, collect(combinations(1:length(names(df))-1, num))[indexin(maximum(val), val)])
-            end
-            return [dev[i][1] for i in 1:length(names(df))-1]
+            forward_stepwise(obj, df)
         end
-    else
-        forward_stepwise(obj, df)
     end
 end
 
@@ -322,36 +329,38 @@ Executes the backward step-wise selection algorithm returning a vector of vector
 indexes of columns corresponding to least value of param1.
 """
 function backward_stepwise(obj::ModelSelection, df::DataFrame)
-    if size(df)[1] > size(df)[2]
-        if [i for i in Set(Array(df[:, end]))] in [0, 0.0, 1, 1.0]
-            dev = [[s for s in 1:length(names(df))-1]]
-            comb = collect(combinations(dev[1], length(names(df)) - 2))
-            while length(dev[end]) != 1
-                val = []
-                for j in comb
-                    logreg = glm(Array(df[:, j]), Array(df[:, names(df)[end]]), Binomial(), ProbitLink())
-                    push!(val, obj.param1(logreg))
+    @suppress begin
+        if size(df)[1] > size(df)[2]
+            if [i for i in Set(Array(df[:, end]))] in [0, 0.0, 1, 1.0]
+                dev = [[s for s in 1:length(names(df))-1]]
+                comb = collect(combinations(dev[1], length(names(df)) - 2))
+                while length(dev[end]) != 1
+                    val = []
+                    for j in comb
+                        logreg = glm(Array(df[:, j]), Array(df[:, names(df)[end]]), Binomial(), ProbitLink())
+                        push!(val, obj.param1(logreg))
+                    end
+                    push!(dev, comb[indexin(minimum(val), val)][1])
+                    comb = collect(combinations(dev[end], length(dev[end]) - 1))
                 end
-                push!(dev, comb[indexin(minimum(val), val)][1])
-                comb = collect(combinations(dev[end], length(dev[end]) - 1))
+                return dev
+            else
+                dev = [[s for s in 1:length(names(df))-1]]
+                comb = collect(combinations(dev[1], length(names(df)) - 2))
+                while length(dev[end]) != 1
+                    val = []
+                    for j in comb
+                        logreg = lm(Array(df[:, j]), Array(df[:, names(df)[end]]))
+                        push!(val, obj.param1(logreg))
+                    end
+                    push!(dev, comb[indexin(maximum(val), val)][1])
+                    comb = collect(combinations(dev[end], length(dev[end]) - 1))
+                end
+                return dev
             end
-            return dev
         else
-            dev = [[s for s in 1:length(names(df))-1]]
-            comb = collect(combinations(dev[1], length(names(df)) - 2))
-            while length(dev[end]) != 1
-                val = []
-                for j in comb
-                    logreg = lm(Array(df[:, j]), Array(df[:, names(df)[end]]))
-                    push!(val, obj.param1(logreg))
-                end
-                push!(dev, comb[indexin(maximum(val), val)][1])
-                comb = collect(combinations(dev[end], length(dev[end]) - 1))
-            end
-            return dev
+            forward_stepwise(obj, df)
         end
-    else
-        forward_stepwise(obj, df)
     end
 end
 
