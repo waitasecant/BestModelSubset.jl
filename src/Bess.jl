@@ -1,13 +1,12 @@
 module Bess
 
-using DataFrames
-using CSV
+using DataFrames: DataFrame
 using GLM
-using Combinatorics
-using MLBase
+using Combinatorics: combinations
+using MLBase: deviance, r2, adjr2, aic, bic
 
 export ModelSelection
-export fit
+export fit!
 export best_subset
 export forward_stepwise
 export backward_stepwise
@@ -20,26 +19,41 @@ object with param2 set as bic else aic.
 mutable struct ModelSelection
     algorithm::Union{Function,Nothing}
     deviance::Union{Function,Real,Nothing}
+    r2::Union{Function,Real,Nothing}
+    adjr2::Union{Function,Real,Nothing}
     aic::Union{Function,Real,Nothing}
     bic::Union{Function,Real,Nothing}
     param1::Union{Function,Real,Nothing}
     param2::Union{Function,Real,Nothing}
 
-    ModelSelection(algorithm, deviance, aic, bic, param1, param2) =
-        typeof(aic) <: Nothing ? new(algorithm, deviance, aic, bic, deviance, bic) :
-        new(algorithm, deviance, aic, bic, deviance, aic)
-end
+    function ModelSelection(algorithm, deviance, r2, adjr2, aic, bic, param1, param2)
+        if typeof(r2) <: Nothing
+            println("Entered Deviance")
+            if typeof(bic) <: Nothing
+                println("Entered AIC")
+                return new(algorithm, deviance, r2, adjr2, aic, bic, deviance, aic)
+            else
+                println("Entered BIC")
+                return new(algorithm, deviance, r2, adjr2, aic, bic, deviance, bic)
+            end
+        end
 
-# An outer (default) constructor.
-# The outer (default) constructor sets algorithm to be Forward Stepwise, param1 to be deviance and param2 to be aic.
-# The inner constructor comes into play and set param2 as aic.
-"""
-    ModelSelection()
-
-Creates ModelSelection(forward_stepwise, MLBase.deviance, MLBase.aic, nothing, nothing, nothing)
-"""
-function ModelSelection()
-    return ModelSelection(forward_stepwise, MLBase.deviance, MLBase.aic, nothing, nothing, nothing)
+        if typeof(deviance) <: Nothing
+            println("Entered R2")
+            if (typeof(aic) <: Nothing) & (typeof(bic) <: Nothing)
+                println("Entered AdjR2")
+                return new(algorithm, deviance, r2, adjr2, aic, bic, r2, adjr2)
+            end
+            if (typeof(adjr2) <: Nothing) & (typeof(bic) <: Nothing)
+                println("Entered AIC")
+                return new(algorithm, deviance, r2, adjr2, aic, bic, r2, aic)
+            end
+            if (typeof(adjr2) <: Nothing) & (typeof(aic) <: Nothing)
+                println("Entered BIC")
+                return new(algorithm, deviance, r2, adjr2, aic, bic, r2, bic)
+            end
+        end
+    end
 end
 
 
@@ -47,7 +61,7 @@ end
 # The outer (main) constructor inputs algorithm, param1 and param2 as strings
 # and then assigns corresponding functions using the dictionary and creates a ModelSelection object.
 """
-    ModelSelection(algorithm::AbstractString, param1::AbstractString, param2::AbstractString)
+ModelSelection(algorithm::AbstractString, param1::AbstractString, param2::AbstractString)
 
 Return a ModelSelection object
 """
@@ -63,44 +77,117 @@ function ModelSelection(algorithm::AbstractString, param1::AbstractString, param
         "backward" => backward_stepwise,
         "backward_stepwise" => backward_stepwise,
         "backward_stepwise_selection" => backward_stepwise,
-        "aic" => MLBase.aic,
-        "bic" => MLBase.bic,
-        "deviance" => MLBase.deviance
+        "deviance" => deviance,
+        "r2" => r2,
+        "adjr2" => adjr2,
+        "aic" => aic,
+        "bic" => bic,
     ])
-    if param2 == "aic"
-        return ModelSelection(values(dict[lowercase(algorithm)]), values(dict[lowercase(param1)]),
-            values(dict[lowercase(param2)]), nothing, nothing, nothing)
+
+    if (lowercase(param1) == "deviance") & (lowercase(param2) == "aic")
+        return ModelSelection(
+            values(dict[lowercase(algorithm)]),
+            values(dict[lowercase(param1)]),
+            nothing,
+            nothing,
+            values(dict[lowercase(param2)]),
+            nothing,
+            nothing,
+            nothing)
     end
-    if param2 == "bic"
-        return ModelSelection(values(dict[lowercase(algorithm)]), values(dict[lowercase(param1)]),
-            nothing, values(dict[lowercase(param2)]), nothing, nothing)
+    if (lowercase(param1) == "deviance") & (lowercase(param2) == "bic")
+        return ModelSelection(
+            values(dict[lowercase(algorithm)]),
+            values(dict[lowercase(param1)]),
+            nothing,
+            nothing,
+            nothing,
+            values(dict[lowercase(param2)]),
+            nothing,
+            nothing)
+    end
+    if (lowercase(param1) == "r2") & (lowercase(param2) == "adjr2")
+        return ModelSelection(
+            values(dict[lowercase(algorithm)]),
+            nothing,
+            values(dict[lowercase(param1)]),
+            values(dict[lowercase(param2)]),
+            nothing,
+            nothing,
+            nothing,
+            nothing)
+    end
+    if (lowercase(param1) == "r2") & (lowercase(param2) == "aic")
+        return ModelSelection(
+            values(dict[lowercase(algorithm)]),
+            nothing,
+            values(dict[lowercase(param1)]),
+            nothing,
+            values(dict[lowercase(param2)]),
+            nothing,
+            nothing,
+            nothing)
+    end
+    if (lowercase(param1) == "r2") & (lowercase(param2) == "bic")
+        return ModelSelection(
+            values(dict[lowercase(algorithm)]),
+            nothing,
+            values(dict[lowercase(param1)]),
+            nothing,
+            nothing,
+            values(dict[lowercase(param2)]),
+            nothing,
+            nothing)
     end
 end
 
-
-# The fit function inputs the ModelSelection object created and data to be either A DataFrame or a matrix.
+# The fit! function inputs the ModelSelection object created and data to be either A DataFrame or a matrix.
 # and updates values into 
 """
-    fit(obj::ModelSelection, data::Union{DataFrame,AbstractMatrix{<:Real}})
+fit!(obj::ModelSelection, data::Union{DataFrame,AbstractMatrix{<:Real}})
 
 Fits the data to the inputed algorithm and parameter, returning a vector of vector containing
 indexes of the columns corresponding to least value of param 2.
 """
-function fit(obj::ModelSelection, data::Union{DataFrame,AbstractMatrix{<:Real}})
-    dev = obj.algorithm(obj, data)
-    final = []
-    for d in dev
-        logreg = glm(Array(data[:, d]), Array(data[:, end]), Binomial(), ProbitLink())
-        push!(final, obj.param2(logreg))
+
+function fit!(obj::ModelSelection, data::Union{DataFrame,AbstractMatrix{<:Real}})
+    if [i for i in Set(Array(data[:, end]))] in [0, 0.0, 1, 1.0]
+        println("Logistic")
+        dev = obj.algorithm(obj, data)
+        final = []
+        for d in dev
+            logreg = glm(Array(data[:, d]), Array(data[:, end]), Binomial(), ProbitLink())
+            push!(final, obj.param2(logreg))
+        end
+        obj.param2 = minimum(final)
+        obj.r2 = nothing
+        obj.adjr2 = nothing
+        obj.deviance = deviance(glm(Array(data[:, dev[indexin(minimum(final), final)[1]]]),
+            Array(data[:, end]), Binomial(), ProbitLink()))
+        obj.param1 = obj.deviance
+        obj.aic = aic(glm(Array(data[:, dev[indexin(minimum(final), final)[1]]]),
+            Array(data[:, end]), Binomial(), ProbitLink()))
+        obj.bic = bic(glm(Array(data[:, dev[indexin(minimum(final), final)[1]]]),
+            Array(data[:, end]), Binomial(), ProbitLink()))
+    else
+        println("Linear")
+        dev = obj.algorithm(obj, data)
+        final = []
+        for d in dev
+            logreg = lm(Array(data[:, d]), Array(data[:, end]))
+            push!(final, obj.param2(logreg))
+        end
+        obj.param2 = minimum(final)
+        obj.r2 = r2(lm(Array(data[:, dev[indexin(minimum(final), final)[1]]]),
+            Array(data[:, end])))
+        obj.adjr2 = adjr2(lm(Array(data[:, dev[indexin(minimum(final), final)[1]]]),
+            Array(data[:, end])))
+        obj.param1 = obj.r2
+        obj.aic = aic(lm(Array(data[:, dev[indexin(minimum(final), final)[1]]]),
+            Array(data[:, end])))
+        obj.bic = bic(lm(Array(data[:, dev[indexin(minimum(final), final)[1]]]),
+            Array(data[:, end])))
     end
-    obj.param2 = minimum(final)
-    obj.aic = MLBase.aic(glm(Array(data[:, dev[indexin(minimum(final), final)[1]]]),
-        Array(data[:, end]), Binomial(), ProbitLink()))
-    obj.bic = MLBase.bic(glm(Array(data[:, dev[indexin(minimum(final), final)[1]]]),
-        Array(data[:, end]), Binomial(), ProbitLink()))
-    obj.deviance = MLBase.deviance(glm(Array(data[:, dev[indexin(minimum(final), final)[1]]]),
-        Array(data[:, end]), Binomial(), ProbitLink()))
-    obj.param1 = obj.deviance
     return [dev[indexin(minimum(final), final)[1]]]
 end
 
@@ -112,27 +199,52 @@ Executes the forward step-wise selection algorithm returning a vector of vectors
 indexes of columns corresponding to least value of param1.
 """
 function forward_stepwise(obj::ModelSelection, df::DataFrame)
-    dev = []
-    comb = collect(combinations(1:length(names(df))-1, 1))
-    for num in 1:length(names(df))-1
-        val = []
-        for j in comb
-            logreg = glm(Array(df[:, j]), Array(df[:, names(df)[end]]), Binomial(), ProbitLink())
-            push!(val, obj.param1(logreg))
-        end
-        push!(dev, comb[indexin(minimum(val), val)])
-        comb = collect(combinations(1:length(names(df))-1, num + 1))
-        l = []
-        for j in 1:length(comb)
-            a = true
-            for i in dev[end][1]
-                a = a & (i in comb[j])
+    if [i for i in Set(Array(df[:, end]))] in [0, 0.0, 1, 1.0]
+        dev = []
+        comb = collect(combinations(1:length(names(df))-1, 1))
+        for num in 1:length(names(df))-1
+            val = []
+            for j in comb
+                logreg = glm(Array(df[:, j]), Array(df[:, names(df)[end]]), Binomial(), ProbitLink())
+                push!(val, obj.param1(logreg))
             end
-            push!(l, a)
+            push!(dev, comb[indexin(minimum(val), val)])
+            comb = collect(combinations(1:length(names(df))-1, num + 1))
+            l = []
+            for j in 1:length(comb)
+                a = true
+                for i in dev[end][1]
+                    a = a & (i in comb[j])
+                end
+                push!(l, a)
+            end
+            comb = comb[[i for i in l]]
         end
-        comb = comb[[i for i in l]]
+        return [dev[i][1] for i in 1:length(names(df))-1]
+    else
+        println("Linear")
+        dev = []
+        comb = collect(combinations(1:length(names(df))-1, 1))
+        for num in 1:length(names(df))-1
+            val = []
+            for j in comb
+                logreg = lm(Array(df[:, j]), Array(df[:, names(df)[end]]))
+                push!(val, obj.param1(logreg))
+            end
+            push!(dev, comb[indexin(maximum(val), val)])
+            comb = collect(combinations(1:length(names(df))-1, num + 1))
+            l = []
+            for j in 1:length(comb)
+                a = true
+                for i in dev[end][1]
+                    a = a & (i in comb[j])
+                end
+                push!(l, a)
+            end
+            comb = comb[[i for i in l]]
+        end
+        return [dev[i][1] for i in 1:length(names(df))-1]
     end
-    return [dev[i][1] for i in 1:length(names(df))-1]
 end
 
 # Forward Step-wise Selection
@@ -230,3 +342,4 @@ function backward_stepwise(obj::ModelSelection, df::AbstractMatrix{<:Real})
 end
 
 end
+
