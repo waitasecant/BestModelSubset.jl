@@ -13,9 +13,28 @@ export forward_stepwise
 export backward_stepwise
 
 """
-Mutable struct taking input as algorithm, params with an inner constructor.
-The inner constructor check if aic is given as input for param2 and creates a new ModelSelection
-object with param2 set as bic else aic.
+    ModelSelection(algorithm::AbstractString, param1::AbstractString, param2::AbstractString)
+
+Returns a ModelSelection object
+    
+    ModelSelection(algorithm::Union{Function,Nothing}
+    deviance::Union{Function,Real,Nothing}
+    r2::Union{Function,Real,Nothing}
+    adjr2::Union{Function,Real,Nothing}
+    aic::Union{Function,Real,Nothing}
+    bic::Union{Function,Real,Nothing}
+    param1::Union{Function,Real,Nothing}
+    param2::Union{Function,Real,Nothing})
+
+For example:
+
+    ModelSelection("bess", "r2", "adjr2") returns
+    ModelSelection(Bess.best_subset, nothing, StatsAPI.r2, StatsAPI.adjr2,
+                   nothing, nothing, StatsAPI.r2, StatsAPI.adjr2)
+
+    ModelSelection("forward","deviance","aic")
+    ModelSelection(Bess.forward_stepwise, StatsAPI.deviance, nothing, nothing,
+                   StatsAPI.aic, nothing, StatsAPI.deviance, StatsAPI.aic)
 """
 mutable struct ModelSelection
     algorithm::Union{Function,Nothing}
@@ -50,15 +69,6 @@ mutable struct ModelSelection
     end
 end
 
-
-# An outer (main) constructor.
-# The outer (main) constructor inputs algorithm, param1 and param2 as strings
-# and then assigns corresponding functions using the dictionary and creates a ModelSelection object.
-"""
-ModelSelection(algorithm::AbstractString, param1::AbstractString, param2::AbstractString)
-
-Return a ModelSelection object
-"""
 function ModelSelection(algorithm::AbstractString, param1::AbstractString, param2::AbstractString)
     dict = Dict([
         "best" => best_subset, "bess" => best_subset,
@@ -125,15 +135,11 @@ function ModelSelection(algorithm::AbstractString, param1::AbstractString, param
     end
 end
 
-# The fit! function inputs the ModelSelection object created and data to be either A DataFrame or a matrix.
-# and updates values into 
 """
-fit!(obj::ModelSelection, data::Union{DataFrame,AbstractMatrix{<:Real}})
+    fit!(obj::ModelSelection, data::Union{DataFrame,AbstractMatrix{<:Real}}) -> Vector{Vector{T}}
 
-Fits the data to the inputed algorithm and parameter, returning a vector of vector containing
-indexes of the columns corresponding to least value of param 2.
+Fit the data to the ModelSelection object.
 """
-
 function fit!(obj::ModelSelection, data::Union{DataFrame,AbstractMatrix{<:Real}})
     @suppress begin
         if [i for i in Set(Array(data[:, end]))] in [0, 0.0, 1, 1.0]
@@ -175,12 +181,10 @@ function fit!(obj::ModelSelection, data::Union{DataFrame,AbstractMatrix{<:Real}}
     end
 end
 
-# Forward Step-wise Selection
 """
-forward_stepwise(obj::ModelSelection, df::DataFrame)
+    forward_stepwise(obj::ModelSelection, df::DataFrame) -> Vector{Vector{T}}
 
-Executes the forward step-wise selection algorithm returning a vector of vectors containing
-indexes of columns corresponding to least value of param1.
+Executes the forward step-wise selection algorithm.
 """
 function forward_stepwise(obj::ModelSelection, df::DataFrame)
     @suppress begin
@@ -232,24 +236,20 @@ function forward_stepwise(obj::ModelSelection, df::DataFrame)
     end
 end
 
-# Forward Step-wise Selection
 """
-forward_stepwise(obj::ModelSelection, df::AbstractMatrix{<:Real})
+    forward_stepwise(obj::ModelSelection, df::AbstractMatrix{<:Real}) -> Vector{Vector{T}}
 
-Executes the forward step-wise selection algorithm returning a vector of vectors containing
-indexes of columns corresponding to least value of param1.
+Executes the forward step-wise selection algorithm.
 """
 function forward_stepwise(obj::ModelSelection, df::AbstractMatrix{<:Real})
     df = DataFrame(df, :auto)
     forward_stepwise(obj, df)
 end
 
-# Best Subset Selection
 """
-best_subset(obj::ModelSelection, df::DataFrame)
+    best_subset(obj::ModelSelection, df::DataFrame) -> Vector{Vector{T}}
 
-Executes the best subset selection algorithm returning a vector of vectors containing
-indexes of columns corresponding to least value of param1.
+Executes the best subset selection algorithm.
 """
 function best_subset(obj::ModelSelection, df::DataFrame)
     @suppress begin
@@ -283,50 +283,20 @@ function best_subset(obj::ModelSelection, df::DataFrame)
     end
 end
 
-# function best_subset(obj::ModelSelection, df::DataFrame)
-#     if size(df)[1] > size(df)[2]
-#         dev = []
-#         for num in 1:length(names(df))-1
-#             val = []
-#             for i in collect(combinations(1:length(names(df))-1, num))
-#                 logreg = glm(Array(df[:, i]), Array(df[:, end]), Binomial(), ProbitLink())
-#                 push!(val, obj.param1(logreg))
-#             end
-#             push!(dev, collect(combinations(1:length(names(df))-1, num))[indexin(minimum(val), val)])
-#         end
-#         return [dev[i][1] for i in 1:length(names(df))-1]
-#     else
-#         forward_stepwise(obj, df)
-#     end
-# end
-
-# Best Subset Selection
 """
-best_subset(obj::ModelSelection, df::AbstractMatrix{<:Real})
+    best_subset(obj::ModelSelection, df::AbstractMatrix{<:Real}) -> Vector{Vector{T}}
 
-Executes the best subset selection algorithm returning a vector of vectors containing
-indexes of columns corresponding to least value of param1.
+    Executes the best subset selection algorithm.
 """
 function best_subset(obj::ModelSelection, df::AbstractMatrix{<:Real})
     df = DataFrame(df, :auto)
     best_subset(obj, df)
 end
 
-# function best_subset(obj::ModelSelection, df::AbstractMatrix{<:Real})
-#     df = DataFrame(df, :auto)
-#     if size(df)[1] > size(df)[2]
-#         best_subset(obj, df)
-#     else
-#         forward_stepwise(obj, df)
-#     end
-# end
-
-# Backward Step-wise Selection
 """
-backward_stepwise(obj::ModelSelection, df::DataFrame)
+    backward_stepwise(obj::ModelSelection, df::DataFrame) -> Vector{Vector{T}}
 
-Executes the backward step-wise selection algorithm returning a vector of vectors containing
-indexes of columns corresponding to least value of param1.
+Executes the backward step-wise selection algorithm.
 """
 function backward_stepwise(obj::ModelSelection, df::DataFrame)
     @suppress begin
@@ -364,26 +334,14 @@ function backward_stepwise(obj::ModelSelection, df::DataFrame)
     end
 end
 
-# Backward Step-wise Selection
 """
-backward_stepwise(obj::ModelSelection, df::DataFrame)
+    backward_stepwise(obj::ModelSelection, df::DataFrame) -> Vector{Vector{T}}
 
-Executes the backward step-wise selection algorithm returning a vector of vectors containing
-indexes of columns corresponding to least value of param1.
+Executes the backward step-wise selection algorithm.
 """
 function backward_stepwise(obj::ModelSelection, df::AbstractMatrix{<:Real})
     df = DataFrame(df, :auto)
     backward_stepwise(obj, df)
 end
 
-# function backward_stepwise(obj::ModelSelection, df::AbstractMatrix{<:Real})
-#     df = DataFrame(df, :auto)
-#     if size(df)[1] > size(df)[2]
-#         backward_stepwise(obj, df)
-#     else
-#         forward_stepwise(obj, df)
-#     end
-# end
-
 end
-

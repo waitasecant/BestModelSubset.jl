@@ -6,23 +6,23 @@
 [![License](https://img.shields.io/github/license/waitasecant/Bess.jl)](LICENSE)
 
 ## Installation
-Installation is straightforward: enter Pkg mode by hitting `]`, and then run
+Installation is straightforward:
 ```julia-repl
-(v1.8) pkg> add Bess
+Pkg.add("Bess")
 ```
-
-## Basic Examples
+then
 Bring `Bess`'s exported items into the namespace by running
 ```julia-repl
 using Bess
 ```
 
 ### ModelSelection
-Instantiate a `ModelSelection` object by running:
+Instantiate a `ModelSelection` object by running, say:
 ```julia-repl
 obj = ModelSelection("bess", "r2", "adjr2")
 ```
 
+### Fit!
 Fit the object to the data:
 ```julia-repl
 fit!(obj, hcat(rand(Float64, (50, 21))))
