@@ -1,9 +1,9 @@
 # SubsetSelection.jl
 *A julia package to implement model selection algorithms on basic regression models.*
 
-[![Build Status](https://ci.appveyor.com/api/projects/status/github/waitasecant/Bess.jl?svg=true)](https://ci.appveyor.com/project/waitasecant/Bess-jl)
-[![Coverage](https://codecov.io/gh/waitasecant/Bess.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/waitasecant/Bess.jl)
-[![License](https://img.shields.io/github/license/waitasecant/Bess.jl)](LICENSE)
+[![Build Status](https://ci.appveyor.com/api/projects/status/github/waitasecant/SubsetSelection.jl?svg=true)](https://ci.appveyor.com/project/waitasecant/subsetselection-jl)
+[![Coverage](https://codecov.io/gh/waitasecant/SubsetSelection.jl/branch/main/graph/badge.svg?token=CWQH7S8IGZ)](https://codecov.io/gh/waitasecant/SubsetSelection.jl)
+[![License](https://img.shields.io/github/license/waitasecant/SubsetSelection.jl)](LICENSE)
 
 ## Installation
 
