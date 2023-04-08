@@ -6,29 +6,33 @@
 [![License](https://img.shields.io/github/license/waitasecant/Bess.jl)](LICENSE)
 
 ## Installation
-Installation is straightforward:
+
+You can install Bess.jl using Julia's package manager
 ```julia-repl
-Pkg.add("Bess")
-```
-then
-Bring `Bess`'s exported items into the namespace by running
-```julia-repl
-using Bess
+julia> using Pkg; Pkg.add("Bess")
 ```
 
-### ModelSelection
-Instantiate a `ModelSelection` object by running, say:
+Bring `Bess`'s exported items into the namespace by
 ```julia-repl
-obj = ModelSelection("bess", "r2", "adjr2")
+julia> using Bess
 ```
 
-### Fit!
-Fit the object to the data:
-```julia-repl
-fit!(obj, hcat(rand(Float64, (50, 21))))
-```
+## Example
 
-Access various statistics like aic, bic by running:
+Instantiate a `ModelSelection` object
 ```julia-repl
-obj.aic
+# To execute best subset selection with primary parameter to be $R^2$ and secondary parameter to be aic.
+julia> obj = ModelSelection("bess", "r2", "aic")
+ModelSelection(Bess.best_subset, nothing, StatsAPI.r2, StatsAPI.adjr2, nothing, nothing, StatsAPI.r2, StatsAPI.adjr2)
+```
+Fit the `ModelSelection`object to the data
+```julia-repl
+# The fit! function updates the fields of the `ModelSelection` object.
+julia> Random.seed!(123); df = hcat(rand(Float64, (50, 21))); # 50\times21 Matrix
+julia> fit!(obj, df)
+```
+Access various statistics like aic, bic for the selected model
+```julia-repl
+julia> obj.aic
+40.51622767157482
 ```
