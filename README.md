@@ -1,4 +1,4 @@
-# Bess.jl
+# SubsetSelection.jl
 *A julia package to implement model selection algorithms on basic regression models.*
 
 [![Build Status](https://ci.appveyor.com/api/projects/status/github/waitasecant/Bess.jl?svg=true)](https://ci.appveyor.com/project/waitasecant/Bess-jl)
