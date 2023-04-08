@@ -6,17 +6,14 @@
 [![License](https://img.shields.io/github/license/waitasecant/Bess.jl)](LICENSE)
 
 ## Installation
-<<<<<<< HEAD
 Installation is straightforward:
 ```julia-repl
 Pkg.add("SubsetSelection.jl")
 ```
 then
 Bring `SubsetSelection`'s exported items into the namespace by running
-=======
 
 You can install Bess.jl using Julia's package manager
->>>>>>> main
 ```julia-repl
 julia> using Pkg; Pkg.add("Bess")
 ```
