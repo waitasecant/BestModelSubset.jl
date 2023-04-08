@@ -1,4 +1,4 @@
-# Bess.jl
+# SubsetSelection.jl
 *A julia package to implement model selection algorithms on basic regression models.*
 
 [![Build Status](https://ci.appveyor.com/api/projects/status/github/waitasecant/Bess.jl?svg=true)](https://ci.appveyor.com/project/waitasecant/Bess-jl)
@@ -6,23 +6,11 @@
 [![License](https://img.shields.io/github/license/waitasecant/Bess.jl)](LICENSE)
 
 ## Installation
-Installation is straightforward:
-```julia-repl
-Pkg.add("SubsetSelection.jl")
-```
-then
-Bring `SubsetSelection`'s exported items into the namespace by running
 
-You can install Bess.jl using Julia's package manager
+You can install SubsetSelection.jl using Julia's package manager
 ```julia-repl
-julia> using Pkg; Pkg.add("Bess")
+julia> using Pkg; Pkg.add("SubsetSelection.jl")
 ```
-
-Bring `Bess`'s exported items into the namespace by
-```julia-repl
-julia> using Bess
-```
-
 ## Example
 
 Instantiate a `ModelSelection` object
