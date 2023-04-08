@@ -30,7 +30,7 @@ ModelSelection(Bess.best_subset, nothing, StatsAPI.r2, nothing, StatsAPI.aic,
 Fit the `ModelSelection`object to the data
 ```julia-repl
 # The fit! function updates the fields of the `ModelSelection` object.
-julia> Random.seed!(123); df = hcat(rand(Float64, (50, 21))); # 50\times21 Matrix
+julia> Random.seed!(123); df = hcat(rand(Float64, (50, 21))); # 50*21 Matrix
 
 julia> fit!(obj, df)
 1-element Vector{Vector{Int64}}:
