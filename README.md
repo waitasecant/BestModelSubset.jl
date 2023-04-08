@@ -18,7 +18,7 @@ Instantiate a `ModelSelection` object
 # To execute best subset selection with primary parameter to be R-squared score  
 # and secondary parameter to be aic.
 julia> obj = ModelSelection("bess", "r2", "aic")
-ModelSelection(Bess.best_subset, nothing, StatsAPI.r2, nothing, StatsAPI.aic,
+ModelSelection(SubsetSelection.best_subset, nothing, StatsAPI.r2, nothing, StatsAPI.aic,
                nothing, StatsAPI.r2, StatsAPI.aic)
 ```
 Fit the `ModelSelection`object to the data
