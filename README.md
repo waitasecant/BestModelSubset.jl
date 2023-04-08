@@ -21,18 +21,26 @@ julia> using Bess
 
 Instantiate a `ModelSelection` object
 ```julia-repl
-# To execute best subset selection with primary parameter to be $R^2$ and secondary parameter to be aic.
+# To execute best subset selection with primary parameter to be R-squared score  
+# and secondary parameter to be aic.
 julia> obj = ModelSelection("bess", "r2", "aic")
-ModelSelection(Bess.best_subset, nothing, StatsAPI.r2, StatsAPI.adjr2, nothing, nothing, StatsAPI.r2, StatsAPI.adjr2)
+ModelSelection(Bess.best_subset, nothing, StatsAPI.r2, nothing, StatsAPI.aic,
+               nothing, StatsAPI.r2, StatsAPI.aic)
 ```
 Fit the `ModelSelection`object to the data
 ```julia-repl
 # The fit! function updates the fields of the `ModelSelection` object.
 julia> Random.seed!(123); df = hcat(rand(Float64, (50, 21))); # 50\times21 Matrix
+
 julia> fit!(obj, df)
+1-element Vector{Vector{Int64}}:
+ [5, 6, 16, 17, 18, 20]
 ```
-Access various statistics like aic, bic for the selected model
+Access various statistics like r2, adjr2, aic and bic for the selected model
 ```julia-repl
+julia> obj.r2
+0.8161760683631274
+
 julia> obj.aic
-40.51622767157482
+21.189713760250477
 ```
