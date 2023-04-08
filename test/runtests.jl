@@ -1,4 +1,4 @@
-using Bess
+using SubsetSelection
 using Test
 using DataFrames, Random
 
