@@ -142,7 +142,7 @@ Fit the data to the ModelSelection object.
 """
 function fit!(obj::ModelSelection, data::Union{DataFrame,AbstractMatrix{<:Real}})
     @suppress begin
-        if [i for i in Set(Array(data[:, end]))] in [0, 0.0, 1, 1.0]
+        if Set(Array(data[:, end])) == Set([0.0, 1.0])
             dev = obj.algorithm(obj, data)
             final = []
             for d in dev
@@ -188,7 +188,7 @@ Executes the forward step-wise selection algorithm.
 """
 function forward_stepwise(obj::ModelSelection, df::DataFrame)
     @suppress begin
-        if [i for i in Set(Array(df[:, end]))] in [0, 0.0, 1, 1.0]
+        if Set(Array(df[:, end])) == Set([0.0, 1.0])
             dev = []
             comb = collect(combinations(1:length(names(df))-1, 1))
             for num in 1:length(names(df))-1
@@ -254,7 +254,7 @@ Executes the best subset selection algorithm.
 function best_subset(obj::ModelSelection, df::DataFrame)
     @suppress begin
         if size(df)[1] > size(df)[2]
-            if [i for i in Set(Array(df[:, end]))] in [0, 0.0, 1, 1.0]
+            if Set(Array(df[:, end])) == Set([0.0, 1.0])
                 dev = []
                 for num in 1:length(names(df))-1
                     val = []
@@ -301,7 +301,7 @@ Executes the backward step-wise selection algorithm.
 function backward_stepwise(obj::ModelSelection, df::DataFrame)
     @suppress begin
         if size(df)[1] > size(df)[2]
-            if [i for i in Set(Array(df[:, end]))] in [0, 0.0, 1, 1.0]
+            if Set(Array(df[:, end])) == Set([0.0, 1.0])
                 dev = [[s for s in 1:length(names(df))-1]]
                 comb = collect(combinations(dev[1], length(names(df)) - 2))
                 while length(dev[end]) != 1
