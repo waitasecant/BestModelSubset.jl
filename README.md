@@ -6,29 +6,50 @@
 [![License](https://img.shields.io/github/license/waitasecant/Bess.jl)](LICENSE)
 
 ## Installation
+<<<<<<< HEAD
 Installation is straightforward:
 ```julia-repl
-Pkg.add("Bess")
+Pkg.add("SubsetSelection.jl")
 ```
 then
-Bring `Bess`'s exported items into the namespace by running
+Bring `SubsetSelection`'s exported items into the namespace by running
+=======
+
+You can install Bess.jl using Julia's package manager
+>>>>>>> main
 ```julia-repl
-using Bess
+julia> using Pkg; Pkg.add("Bess")
 ```
 
-### ModelSelection
-Instantiate a `ModelSelection` object by running, say:
+Bring `Bess`'s exported items into the namespace by
 ```julia-repl
-obj = ModelSelection("bess", "r2", "adjr2")
+julia> using Bess
 ```
 
-### Fit!
-Fit the object to the data:
-```julia-repl
-fit!(obj, hcat(rand(Float64, (50, 21))))
-```
+## Example
 
-Access various statistics like aic, bic by running:
+Instantiate a `ModelSelection` object
 ```julia-repl
-obj.aic
+# To execute best subset selection with primary parameter to be R-squared score  
+# and secondary parameter to be aic.
+julia> obj = ModelSelection("bess", "r2", "aic")
+ModelSelection(Bess.best_subset, nothing, StatsAPI.r2, nothing, StatsAPI.aic,
+               nothing, StatsAPI.r2, StatsAPI.aic)
+```
+Fit the `ModelSelection`object to the data
+```julia-repl
+# The fit! function updates the fields of the `ModelSelection` object.
+julia> Random.seed!(123); df = hcat(rand(Float64, (50, 21))); # 50*21 Matrix
+
+julia> fit!(obj, df)
+1-element Vector{Vector{Int64}}:
+ [5, 6, 16, 17, 18, 20]
+```
+Access various statistics like r2, adjr2, aic and bic for the selected model
+```julia-repl
+julia> obj.r2
+0.8161760683631274
+
+julia> obj.aic
+21.189713760250477
 ```
