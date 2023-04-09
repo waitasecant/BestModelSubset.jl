@@ -1,4 +1,4 @@
-using SubsetSelection
+using BestModelSubset
 using Test
 using DataFrames, Random
 

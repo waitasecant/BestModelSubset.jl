@@ -1,4 +1,4 @@
-module SubsetSelection
+module BestModelSubset
 
 using DataFrames: DataFrame
 using GLM
@@ -29,11 +29,11 @@ Returns a ModelSelection object
 For example:
 
     ModelSelection("bess", "r2", "adjr2") returns
-    ModelSelection(SubsetSelection.best_subset, nothing, StatsAPI.r2, StatsAPI.adjr2,
+    ModelSelection(BestModelSubset.best_subset, nothing, StatsAPI.r2, StatsAPI.adjr2,
                    nothing, nothing, StatsAPI.r2, StatsAPI.adjr2)
 
     ModelSelection("forward","deviance","aic")
-    ModelSelection(SubsetSelection.forward_stepwise, StatsAPI.deviance, nothing, nothing,
+    ModelSelection(BestModelSubset.forward_stepwise, StatsAPI.deviance, nothing, nothing,
                    StatsAPI.aic, nothing, StatsAPI.deviance, StatsAPI.aic)
 """
 mutable struct ModelSelection

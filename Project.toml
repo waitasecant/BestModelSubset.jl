@@ -1,4 +1,4 @@
-name = "SubsetSelection"
+name = "BestModelSubset"
 uuid = "0f6bdffc-513a-42d2-9813-9a545800a63f"
 authors = ["Himanshu"]
 version = "0.1.0"

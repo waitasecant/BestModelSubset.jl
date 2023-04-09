@@ -1,15 +1,15 @@
-# SubsetSelection.jl
+# BestModelSubset.jl
 *A julia package to implement model selection algorithms on basic regression models.*
 
-[![Build Status](https://ci.appveyor.com/api/projects/status/github/waitasecant/SubsetSelection.jl?svg=true)](https://ci.appveyor.com/project/waitasecant/subsetselection-jl)
-[![Coverage](https://codecov.io/gh/waitasecant/SubsetSelection.jl/branch/main/graph/badge.svg?token=CWQH7S8IGZ)](https://codecov.io/gh/waitasecant/SubsetSelection.jl)
-[![License](https://img.shields.io/github/license/waitasecant/SubsetSelection.jl)](LICENSE)
+[![Build Status](https://ci.appveyor.com/api/projects/status/github/waitasecant/BestModelSubset.jl?svg=true)](https://ci.appveyor.com/project/waitasecant/bestmodelsubset-jl)
+[![Coverage](https://codecov.io/gh/waitasecant/BestModelSubset.jl/branch/main/graph/badge.svg?token=CWQH7S8IGZ)](https://codecov.io/gh/waitasecant/BestModelSubset.jl)
+[![License](https://img.shields.io/github/license/waitasecant/BestModelSubset.jl)](LICENSE)
 
 ## Installation
 
-You can install SubsetSelection.jl using Julia's package manager
+You can install BestModelSubset.jl using Julia's package manager
 ```julia-repl
-julia> using Pkg; Pkg.add("SubsetSelection.jl")
+julia> using Pkg; Pkg.add("BestModelSubset.jl")
 ```
 ## Example
 
@@ -18,7 +18,7 @@ Instantiate a `ModelSelection` object
 # To execute best subset selection with primary parameter to be R-squared score  
 # and secondary parameter to be aic.
 julia> obj = ModelSelection("bess", "r2", "aic")
-ModelSelection(SubsetSelection.best_subset, nothing, StatsAPI.r2, nothing, StatsAPI.aic,
+ModelSelection(BestModelSubset.best_subset, nothing, StatsAPI.r2, nothing, StatsAPI.aic,
                nothing, StatsAPI.r2, StatsAPI.aic)
 ```
 Fit the `ModelSelection`object to the data
