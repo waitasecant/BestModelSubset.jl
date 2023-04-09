@@ -3,6 +3,7 @@
 
 [![Build Status](https://ci.appveyor.com/api/projects/status/github/waitasecant/BestModelSubset.jl?svg=true)](https://ci.appveyor.com/project/waitasecant/bestmodelsubset-jl)
 [![Coverage](https://codecov.io/gh/waitasecant/BestModelSubset.jl/branch/main/graph/badge.svg?token=CWQH7S8IGZ)](https://codecov.io/gh/waitasecant/BestModelSubset.jl)
+[![License](https://img.shields.io/github/license/waitasecant/BestModelSubset.jl)](LICENSE)
 
 ## Installation
 
