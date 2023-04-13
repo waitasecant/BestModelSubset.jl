@@ -8,21 +8,21 @@
 ## Installation
 
 You can install BestModelSubset.jl using Julia's package manager
-```julia-repl
-julia> using Pkg; Pkg.add("https://www.github.com/waitasecant/BestModelSubset.jl.git")
+```julia
+julia> using Pkg; Pkg.add(url="https://www.github.com/waitasecant/BestModelSubset.jl.git")
 ```
 ## Example
 
 Instantiate a `ModelSelection` object
-```julia-repl
-# To execute best subset selection with primary parameter to be R-squared score  
+```julia
+# To execute forward step-wise selection with primary parameter to be R-squared score  
 # and secondary parameter to be aic.
-julia> obj = ModelSelection("bess", "r2", "aic")
-ModelSelection(BestModelSubset.best_subset, nothing, StatsAPI.r2, nothing, StatsAPI.aic,
+julia> obj = ModelSelection("forward", "r2", "aic")
+ModelSelection(BestModelSubset.forward_stepwise, nothing, StatsAPI.r2, nothing, StatsAPI.aic,
                nothing, StatsAPI.r2, StatsAPI.aic)
 ```
 Fit the `ModelSelection`object to the data
-```julia-repl
+```julia
 # The fit! function updates the fields of the `ModelSelection` object.
 julia> Random.seed!(123); df = hcat(rand(Float64, (50, 21))); # 50*21 Matrix
 
@@ -31,7 +31,7 @@ julia> fit!(obj, df)
  [5, 6, 16, 17, 18, 20]
 ```
 Access various statistics like r2, adjr2, aic and bic for the selected model
-```julia-repl
+```julia
 julia> obj.r2
 0.8161760683631274
 
