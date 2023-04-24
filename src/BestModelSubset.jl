@@ -4,7 +4,7 @@ using DataFrames: DataFrame
 using GLM
 using Combinatorics: combinations
 using MLBase: deviance, r2, adjr2, aic, bic
-using Suppressor: @suppress_out
+using Suppressor: @suppress
 
 export ModelSelection
 export fit!
@@ -69,9 +69,15 @@ mutable struct ModelSelection
     end
 end
 
-
-
 function ModelSelection(algorithm::AbstractString, param1::AbstractString, param2::AbstractString)
+    dict = Dict([
+        "best" => best_subset, "bess" => best_subset,
+        "best_subset" => best_subset, "best_subset_selection" => best_subset,
+        "forward" => forward_stepwise, "forward_stepwise" => forward_stepwise,
+        "forward_stepwise_selection" => forward_stepwise, "backward" => backward_stepwise,
+        "backward_stepwise" => backward_stepwise, "backward_stepwise_selection" => backward_stepwise,
+        "deviance" => deviance, "r2" => r2, "adjr2" => adjr2, "aic" => aic, "bic" => bic])
+
     if (lowercase(param1) == "deviance") & (lowercase(param2) == "aic")
         return ModelSelection(
             values(dict[lowercase(algorithm)]),
@@ -135,7 +141,7 @@ end
 Fit the data to the ModelSelection object.
 """
 function fit!(obj::ModelSelection, data::Union{DataFrame,AbstractMatrix{<:Real}})
-    @suppress_out begin
+    @suppress begin
         if Set(Array(data[:, end])) == Set([0.0, 1.0])
             dev = obj.algorithm(obj, data)
             final = []
@@ -181,7 +187,7 @@ end
 Executes the forward step-wise selection algorithm.
 """
 function forward_stepwise(obj::ModelSelection, df::DataFrame)
-    @suppress_out begin
+    @suppress begin
         if Set(Array(df[:, end])) == Set([0.0, 1.0])
             dev = []
             comb = collect(combinations(1:length(names(df))-1, 1))
@@ -246,7 +252,7 @@ end
 Executes the best subset selection algorithm.
 """
 function best_subset(obj::ModelSelection, df::DataFrame)
-    @suppress_out begin
+    @suppress begin
         if size(df)[1] > size(df)[2]
             if Set(Array(df[:, end])) == Set([0.0, 1.0])
                 dev = []
@@ -272,8 +278,6 @@ function best_subset(obj::ModelSelection, df::DataFrame)
                 return [dev[i][1] for i in 1:length(names(df))-1]
             end
         else
-            @warn("The data entered has number of columns greater than number of rows.
-                   Hence, the function will be executing forward stepwise selection.")
             forward_stepwise(obj, df)
         end
     end
@@ -295,7 +299,7 @@ end
 Executes the backward step-wise selection algorithm.
 """
 function backward_stepwise(obj::ModelSelection, df::DataFrame)
-    @suppress_out begin
+    @suppress begin
         if size(df)[1] > size(df)[2]
             if Set(Array(df[:, end])) == Set([0.0, 1.0])
                 dev = [[s for s in 1:length(names(df))-1]]
@@ -325,8 +329,6 @@ function backward_stepwise(obj::ModelSelection, df::DataFrame)
                 return dev
             end
         else
-            @warn("The data entered has number of columns greater than number of rows.
-                   Hence, the function will be executing forward stepwise selection.")
             forward_stepwise(obj, df)
         end
     end
@@ -341,13 +343,5 @@ function backward_stepwise(obj::ModelSelection, df::AbstractMatrix{<:Real})
     df = DataFrame(df, :auto)
     backward_stepwise(obj, df)
 end
-
-const dict = Dict([
-    "best" => best_subset, "bess" => best_subset,
-    "best_subset" => best_subset, "best_subset_selection" => best_subset,
-    "forward" => forward_stepwise, "forward_stepwise" => forward_stepwise,
-    "forward_stepwise_selection" => forward_stepwise, "backward" => backward_stepwise,
-    "backward_stepwise" => backward_stepwise, "backward_stepwise_selection" => backward_stepwise,
-    "deviance" => deviance, "r2" => r2, "adjr2" => adjr2, "aic" => aic, "bic" => bic])
 
 end
