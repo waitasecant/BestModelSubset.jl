@@ -137,7 +137,7 @@ end
 """
     fit!(obj::ModelSelection, data::Union{DataFrame,AbstractMatrix{<:Real}}) -> Vector{Vector{T}}
 
-Fit the data to the ModelSelection object!
+Fit the data to the ModelSelection object.
 """
 function fit!(obj::ModelSelection, data::Union{DataFrame,AbstractMatrix{<:Real}})
     if Set(Array(data[:, end])) == Set([0.0, 1.0])

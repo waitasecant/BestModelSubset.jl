@@ -9,7 +9,7 @@
 
 You can install BestModelSubset.jl using Julia's package manager
 ```julia
-julia> using Pkg; Pkg.add("BestModelSubset.jl")
+julia> using Pkg; Pkg.add(url="https://github.com/waitasecant/BestModelSubset.jl.git")
 ```
 
 ## Example 1
