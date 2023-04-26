@@ -6,9 +6,6 @@ using Combinatorics: combinations
 
 export ModelSelection
 export fit!
-export best_subset
-export forward_stepwise
-export backward_stepwise
 
 """
     ModelSelection(algorithm::AbstractString, param1::AbstractString, param2::AbstractString)
