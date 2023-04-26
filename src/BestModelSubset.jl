@@ -3,7 +3,6 @@ module BestModelSubset
 using DataFrames: DataFrame
 using GLM
 using Combinatorics: combinations
-using MLBase: deviance, r2, adjr2, aic, bic
 
 export ModelSelection
 export fit!
@@ -75,7 +74,8 @@ function ModelSelection(algorithm::AbstractString, param1::AbstractString, param
         "forward" => forward_stepwise, "forward_stepwise" => forward_stepwise,
         "forward_stepwise_selection" => forward_stepwise, "backward" => backward_stepwise,
         "backward_stepwise" => backward_stepwise, "backward_stepwise_selection" => backward_stepwise,
-        "deviance" => deviance, "r2" => r2, "adjr2" => adjr2, "aic" => aic, "bic" => bic])
+        "deviance" => GLM.deviance, "r2" => GLM.r2, "adjr2" => GLM.adjr2,
+        "aic" => GLM.aic, "bic" => GLM.bic])
 
     if (lowercase(param1) == "deviance") & (lowercase(param2) == "aic")
         return ModelSelection(
@@ -150,12 +150,12 @@ function fit!(obj::ModelSelection, data::Union{DataFrame,AbstractMatrix{<:Real}}
         obj.param2 = minimum(final)
         obj.r2 = nothing
         obj.adjr2 = nothing
-        obj.deviance = deviance(glm(Array(data[:, dev[indexin(minimum(final), final)[1]]]),
+        obj.deviance = GLM.deviance(glm(Array(data[:, dev[indexin(minimum(final), final)[1]]]),
             Array(data[:, end]), Binomial(), ProbitLink()))
         obj.param1 = obj.deviance
-        obj.aic = aic(glm(Array(data[:, dev[indexin(minimum(final), final)[1]]]),
+        obj.aic = GLM.aic(glm(Array(data[:, dev[indexin(minimum(final), final)[1]]]),
             Array(data[:, end]), Binomial(), ProbitLink()))
-        obj.bic = bic(glm(Array(data[:, dev[indexin(minimum(final), final)[1]]]),
+        obj.bic = GLM.bic(glm(Array(data[:, dev[indexin(minimum(final), final)[1]]]),
             Array(data[:, end]), Binomial(), ProbitLink()))
     else
         dev = obj.algorithm(obj, data)
@@ -165,14 +165,14 @@ function fit!(obj::ModelSelection, data::Union{DataFrame,AbstractMatrix{<:Real}}
             push!(final, obj.param2(logreg))
         end
         obj.param2 = minimum(final)
-        obj.r2 = r2(lm(Array(data[:, dev[indexin(minimum(final), final)[1]]]),
+        obj.r2 = GLM.r2(lm(Array(data[:, dev[indexin(minimum(final), final)[1]]]),
             Array(data[:, end])))
-        obj.adjr2 = adjr2(lm(Array(data[:, dev[indexin(minimum(final), final)[1]]]),
+        obj.adjr2 = GLM.adjr2(lm(Array(data[:, dev[indexin(minimum(final), final)[1]]]),
             Array(data[:, end])))
         obj.param1 = obj.r2
-        obj.aic = aic(lm(Array(data[:, dev[indexin(minimum(final), final)[1]]]),
+        obj.aic = GLM.aic(lm(Array(data[:, dev[indexin(minimum(final), final)[1]]]),
             Array(data[:, end])))
-        obj.bic = bic(lm(Array(data[:, dev[indexin(minimum(final), final)[1]]]),
+        obj.bic = GLM.bic(lm(Array(data[:, dev[indexin(minimum(final), final)[1]]]),
             Array(data[:, end])))
     end
     return [dev[indexin(minimum(final), final)[1]]]
