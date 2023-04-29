@@ -269,6 +269,8 @@ function best_subset(obj::ModelSelection, df::DataFrame)
             return [dev[i][1] for i in 1:length(names(df))-1]
         end
     else
+        @warn("Since size of the data matrix has $(size(df)[1]) < $(size(df)[2]), best subset selection
+        cannot be used, hence it will execute forward step-wise selection")
         forward_stepwise(obj, df)
     end
 end
@@ -318,6 +320,9 @@ function backward_stepwise(obj::ModelSelection, df::DataFrame)
             return dev
         end
     else
+        @warn("Since size of the data matrix has number of rows less than number of columns,
+        i.e. $(size(df)[1]) < $(size(df)[2]). Hence, backward step-wise selection cannot be used.
+        Hence, forward step-wise selection will be executed.")
         forward_stepwise(obj, df)
     end
 end
